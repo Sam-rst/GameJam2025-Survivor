@@ -1,5 +1,5 @@
 from src.settings import *
-from src.systems.input_manager import InputManager
+from src.systems.input_manager import InputManager, KeyboardInputManager
 
 
 class Player(pygame.sprite.Sprite):
@@ -9,7 +9,7 @@ class Player(pygame.sprite.Sprite):
         pos,
         groups,
         collision_sprites,
-        input_manager: InputManager,
+        input_manager: InputManager = KeyboardInputManager(),
     ):
         super().__init__(groups)
         # Managers
@@ -41,6 +41,9 @@ class Player(pygame.sprite.Sprite):
         self.hitbox_rect.y += self.direction.y * self.speed * dt
         self.collision("vertical")
         self.rect.center = self.hitbox_rect.center
+
+    def change_input_manager(self, input_manager):
+        self.input_manager = input_manager
 
     def collision(self, direction):
         for sprite in self.collision_sprites:
