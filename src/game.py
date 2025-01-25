@@ -1,12 +1,15 @@
+import random
+import pygame
 from src.settings import *
 from src.entities.player import Player
 from src.systems.collision import *
-import random
-import pygame
+from src.systems.input_manager import KeyboardInputManager
 
 
 class Game:
     def __init__(self):
+        input_manager = KeyboardInputManager()
+
         pygame.init()
         self.display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption("Survivor")
@@ -18,7 +21,7 @@ class Game:
         self.collision_sprites = pygame.sprite.Group()
 
         # Sprites --
-        self.player = Player((400, 300), self.all_sprites, self.collision_sprites)
+        self.player = Player(pos=(400, 300), groups=self.all_sprites, collision_sprites=self.collision_sprites, input_manager=input_manager)
         for _ in range(6):
             x, y = random.randint(0, WINDOW_WIDTH), random.randint(0, WINDOW_HEIGHT)
             w, h = random.randint(60, 100), random.randint(50, 100)
@@ -41,10 +44,9 @@ class Game:
             self.all_sprites.update(dt)
 
             # Draw
-            self.display_surface.fill('black')
+            self.display_surface.fill("black")
             self.all_sprites.draw(self.display_surface)
             pygame.display.update()
-
 
         pygame.quit()
 
