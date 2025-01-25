@@ -1,6 +1,6 @@
 from settings import *
-from player import Player
-from sprites import *
+from src.entities.player import Player
+from src.systems.collisions import *
 import random
 
 
