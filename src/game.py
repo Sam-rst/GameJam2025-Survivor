@@ -10,11 +10,13 @@ from src.systems.input_manager import KeyboardInputManager, NintendoSwitchProInp
 INPUTS_MANAGERS = {
     "keyboard": KeyboardInputManager(layout=DEFAULT_LAYOUT),
     "nintendo_switch_pro": NintendoSwitchProInputManager(),
+    "xbox_one_windows": NintendoSwitchProInputManager(),
 }
 
 class Game:
     def __init__(self):
 
+        self.input_manager = INPUTS_MANAGERS["keyboard"]
         pygame.init()
         self.display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption("Survivor")
@@ -28,7 +30,7 @@ class Game:
         self.setup()
 
         # Sprites --
-        self.player = Player(pos=(500, 300), groups=self.all_sprites, collision_sprites=self.collision_sprites)
+        self.player = Player(pos=(500, 300), groups=self.all_sprites, collision_sprites=self.collision_sprites, input_manager=self.input_manager)
         
 
     def setup(self):
@@ -54,16 +56,26 @@ class Game:
                 # Si une touche du clavier est pressée
                 elif event.type in [pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN]:
                     print("Changement avec le clavier")
-                    self.player.change_input_manager(INPUTS_MANAGERS["keyboard"])  # Changer pour le clavier
+                    self.player.change_input_manager(INPUTS_MANAGERS["keyboard"])
                     if event.key == pygame.K_ESCAPE:
                         self.running = False
 
                 # Si un bouton de la manette est pressé
                 elif event.type in [pygame.JOYBUTTONDOWN]:
                     joystick = pygame.joystick.Joystick(event.joy)
+                    print(joystick.get_name())
                     if joystick.get_name() == "Nintendo Switch Pro Controller":
                         print("Changement avec une manette Nintendo Switch Pro")
-                        self.player.change_input_manager(INPUTS_MANAGERS["nintendo_switch_pro"])  # Changer pour la manette
+                        self.input_manager = INPUTS_MANAGERS["nintendo_switch_pro"]
+                        self.player.change_input_manager(self.input_manager)
+                        if event.button == 6:
+                            self.running = False
+                    if joystick.get_name() == "Controller (Xbox One For Windows)":
+                        print("Changement avec une manette Nintendo Switch Pro")
+                        self.input_manager = INPUTS_MANAGERS["xbox_one_windows"]
+                        self.player.change_input_manager(self.input_manager)
+                        if event.button == 6:
+                            self.running = False
 
             # Update
             self.all_sprites.update(dt)

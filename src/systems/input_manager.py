@@ -73,9 +73,9 @@ class NintendoSwitchProInputManager(InputManager):
                 self.joystick.init()
                 print("Nintendo Switch Pro Controller initialized.")
             else:
-                print("No controller detected.")
+                print("No joystick detected.")
         except pygame.error as e:
-            raise RuntimeError(f"Failed to initialize joystick: {e}")
+                print(f"Failed to initialize joystick: {e}")
 
     def update(self):
         """
