@@ -3,6 +3,7 @@ import pygame
 from src.settings import *
 from src.entities.player import Player
 from src.systems.collision import *
+from pytmx.util_pygame import load_pygame
 from src.systems.input_manager import KeyboardInputManager
 
 
@@ -20,12 +21,21 @@ class Game:
         self.all_sprites = pygame.sprite.Group()
         self.collision_sprites = pygame.sprite.Group()
 
+        self.setup()
+
         # Sprites --
-        self.player = Player(pos=(400, 300), groups=self.all_sprites, collision_sprites=self.collision_sprites, input_manager=input_manager)
-        for _ in range(6):
-            x, y = random.randint(0, WINDOW_WIDTH), random.randint(0, WINDOW_HEIGHT)
-            w, h = random.randint(60, 100), random.randint(50, 100)
-            CollisionSprite((x, y), (w, h), (self.all_sprites, self.collision_sprites))
+        self.player = Player(pos=(500, 300), groups=self.all_sprites, collision_sprites=self.collision_sprites, input_manager=input_manager)
+        
+
+    def setup(self):
+        map = load_pygame(join('assets', 'data', 'maps', 'world.tmx'))
+            
+        for x,y,image in map.get_layer_by_name('Ground').tiles():
+            Sprite((x * TILE_SIZE, y * TILE_SIZE), image, (self.all_sprites,))
+        for obj in map.get_layer_by_name('Objects'):
+            CollisionSprite((obj.x, obj.y), obj.image, (self.all_sprites, self.collision_sprites))
+        for obj in map.get_layer_by_name('Collisions'):
+            CollisionSprite((obj.x, obj.y), pygame.Surface((obj.width, obj.height)), self.collision_sprites)
 
     def run(self):
         while self.running:
