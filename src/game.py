@@ -2,6 +2,7 @@ from src.settings import *
 from src.entities.player import Player
 from src.systems.collision import *
 import random
+import pygame
 
 
 class Game:
@@ -18,7 +19,7 @@ class Game:
 
         # Sprites --
         self.player = Player((400, 300), self.all_sprites, self.collision_sprites)
-        for i in range(6):
+        for _ in range(6):
             x, y = random.randint(0, WINDOW_WIDTH), random.randint(0, WINDOW_HEIGHT)
             w, h = random.randint(60, 100), random.randint(50, 100)
             CollisionSprite((x, y), (w, h), (self.all_sprites, self.collision_sprites))
