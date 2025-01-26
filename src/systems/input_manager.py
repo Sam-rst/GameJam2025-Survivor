@@ -9,13 +9,25 @@ class InputManager(ABC):
     Centralized input manager to handle keyboard and controller inputs.
     """
 
-    def __init__(self):
+    def __init__(self, layout: LAYOUTS = DEFAULT_LAYOUT):
+        self.set_layout(layout)
+
         self.actions = {
-            "move_up": False,
-            "move_down": False,
-            "move_left": False,
-            "move_right": False,
+            "move_up": {"state": False, "key": COMMAND_LAYOUTS[layout]["move_up"]},
+            "move_down": {"state": False, "key": COMMAND_LAYOUTS[layout]["move_down"]},
+            "move_left": {"state": False, "key": COMMAND_LAYOUTS[layout]["move_left"]},
+            "move_right": {
+                "state": False,
+                "key": COMMAND_LAYOUTS[layout]["move_right"],
+            },
+            "pause": {"state": False, "key": COMMAND_LAYOUTS[layout]["pause"]},
         }
+
+    def set_layout(self, layout):
+        """
+        Configure the key mappings based on the selected keyboard layout.
+        """
+        self.key_mapping = COMMAND_LAYOUTS[layout]
 
     @abstractmethod
     def update(self):
@@ -31,22 +43,18 @@ class InputManager(ABC):
         """
         self.update()
         direction = pygame.Vector2(
-            int(self.actions["move_right"]) - int(self.actions["move_left"]),
-            int(self.actions["move_down"]) - int(self.actions["move_up"]),
+            int(self.actions["move_right"]["state"])
+            - int(self.actions["move_left"]["state"]),
+            int(self.actions["move_down"]["state"])
+            - int(self.actions["move_up"]["state"]),
         )
         return direction.normalize() if direction.length() > 0 else direction
 
 
 class KeyboardInputManager(InputManager):
-    def __init__(self, layout: LAYOUTS=DEFAULT_LAYOUT):
-        super().__init__()
+    def __init__(self, layout: LAYOUTS = DEFAULT_LAYOUT):
+        super().__init__(layout=layout)
         self.set_layout(layout)
-
-    def set_layout(self, layout):
-        """
-        Configure the key mappings based on the selected keyboard layout.
-        """
-        self.key_mapping = KEYBOARD_LAYOUTS[layout]
 
     def update(self):
         """
@@ -54,34 +62,66 @@ class KeyboardInputManager(InputManager):
         """
         keys = pygame.key.get_pressed()
         for action, key_list in self.key_mapping.items():
-            self.actions[action] = any(keys[key] for key in key_list)
+            self.actions[action]["state"] = any(keys[key] for key in key_list)
 
 
 class NintendoSwitchProInputManager(InputManager):
-    def __init__(self, joystick_id=0):
-        super().__init__()
-
-        # Initialiser les joysticks
+    def __init__(self, joystick_id=0, layout: LAYOUTS = LAYOUTS["NSPRO"]):
+        super().__init__(layout=layout)
         pygame.joystick.init()
+        self.joystick = None
+        self.set_joystick(joystick_id)
 
-        # Essayer d'initialiser la première manette détectée
-        try:
-            if pygame.joystick.get_count() > 0:
-                print(pygame.joystick.get_count())
-                joystick_id = 0  # Utiliser le premier joystick détecté
+    def set_joystick(self, joystick_id):
+        """Initialize or update the joystick."""
+        if pygame.joystick.get_count() > 0:
+            try:
                 self.joystick = pygame.joystick.Joystick(joystick_id)
                 self.joystick.init()
                 print("Nintendo Switch Pro Controller initialized.")
-            else:
-                print("No joystick detected.")
-        except pygame.error as e:
-                print(f"Failed to initialize joystick: {e}")
+            except pygame.error as e:
+                print(f"Failed to initialize Nintendo Switch Pro Controller: {e}")
+        else:
+            print("No Nintendo Switch Pro Controller detected.")
+            self.joystick = None
 
     def update(self):
-        """
-        Update the state of actions based on controller inputs.
-        """
-        self.actions["move_up"] = self.joystick.get_axis(1) < -0.5
-        self.actions["move_down"] = self.joystick.get_axis(1) > 0.5
-        self.actions["move_left"] = self.joystick.get_axis(0) < -0.5
-        self.actions["move_right"] = self.joystick.get_axis(0) > 0.5
+        """Update the state of actions based on controller inputs."""
+        if self.joystick:
+            self.actions["move_up"]["state"] = self.joystick.get_axis(1) < -0.5
+            self.actions["move_down"]["state"] = self.joystick.get_axis(1) > 0.5
+            self.actions["move_left"]["state"] = self.joystick.get_axis(0) < -0.5
+            self.actions["move_right"]["state"] = self.joystick.get_axis(0) > 0.5
+        else:
+            print("No joystick available for update.")
+
+
+class XboxInputManager(InputManager):
+    def __init__(self, joystick_id=0, layout: LAYOUTS = LAYOUTS["NSPRO"]):
+        super().__init__(layout=layout)
+        pygame.joystick.init()
+        self.joystick = None
+        self.set_joystick(joystick_id)
+
+    def set_joystick(self, joystick_id):
+        """Initialize or update the joystick."""
+        if pygame.joystick.get_count() > 0:
+            try:
+                self.joystick = pygame.joystick.Joystick(joystick_id)
+                self.joystick.init()
+                print("Xbox Controller initialized.")
+            except pygame.error as e:
+                print(f"Failed to initialize Xbox Controller: {e}")
+        else:
+            print("No Xbox Controller detected.")
+            self.joystick = None
+
+    def update(self):
+        """Update the state of actions based on controller inputs."""
+        if self.joystick:
+            self.actions["move_up"]["state"] = self.joystick.get_axis(1) < -0.5
+            self.actions["move_down"]["state"] = self.joystick.get_axis(1) > 0.5
+            self.actions["move_left"]["state"] = self.joystick.get_axis(0) < -0.5
+            self.actions["move_right"]["state"] = self.joystick.get_axis(0) > 0.5
+        else:
+            print("No joystick available for update.")
