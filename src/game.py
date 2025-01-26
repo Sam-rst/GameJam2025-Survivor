@@ -38,6 +38,7 @@ class Game:
         pygame.display.set_caption("Survivor")
         self.clock = pygame.time.Clock()
         self.running = True
+        self.font = pygame.font.Font(None, 36)
 
         # Groups
         self.all_sprites = AllSprites()
@@ -64,8 +65,7 @@ class Game:
         self.music.play(loops = -1)
 
         # setup
-        self.load_images()
-        self.setup()
+        self.main_menu()
 
     def load_images(self):
         self.bullet_surf = pygame.image.load(join('assets', 'images', 'gun', 'bullet.png')).convert_alpha()
@@ -93,9 +93,51 @@ class Game:
             current_time = pygame.time.get_ticks()
             if current_time - self.shoot_time >= self.gun_cooldown:
                 self.can_shoot = True
+                
+    def draw_text(self, text, font, color, surface, x, y):
+        text_obj = font.render(text, True, color)
+        text_rect = text_obj.get_rect(center = (x, y))
+        surface.blit(text_obj, text_rect)
+
+    def main_menu(self):
+        while True:
+            self.display_surface.fill('black')
+            self.draw_text("Main menu", self.font, "white", self.display_surface, 400, 200)
+            self.draw_text("Press ENTER to Start", self.font, "white", self.display_surface, 400, 300)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        self.setup()
+                        return
+                    
+            pygame.display.flip()
+            self.clock.tick(60)
+            
+
+    def game_over(self):
+        while True:
+            self.display_surface.fill('black')
+            self.draw_text("Game over", self.font, "white", self.display_surface, 400, 200)
+            self.draw_text("Press R to Return Menu or Escape to Quit", self.font, "white", self.display_surface, 400, 300)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_r:
+                        return self.main_menu()
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+
+            pygame.display.flip()
+            self.clock.tick(60)
 
 
     def setup(self):
+        self.load_images()
         map = load_pygame(join("assets", "data", "maps", "world.tmx"))
 
         for x, y, image in map.get_layer_by_name("Ground").tiles():
@@ -159,7 +201,7 @@ class Game:
 
     def player_collision(self):
         if pygame.sprite.spritecollide(self.player, self.ennemy_sprites, False, pygame.sprite.collide_mask):
-            self.running = False
+            self.game_over()
 
     def run(self):
         while self.running:
