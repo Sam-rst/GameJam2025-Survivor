@@ -5,7 +5,7 @@ from os import walk
 WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
 TILE_SIZE = 64
 
-LAYOUTS = {"AZERTY": "AZERTY", "QWERTY": "QWERTY", "XBOX": "XBOX", "NSPRO": "NSPRO"}
+LAYOUTS = {"AZERTY": "AZERTY", "QWERTY": "QWERTY", "XBOX": "XBOX", "NSPRO": "NSPRO", "PS5": "PS5"}
 COMMAND_LAYOUTS = {
     LAYOUTS["AZERTY"]: {
         "move_up": [pygame.K_z, pygame.K_UP],
@@ -29,6 +29,13 @@ COMMAND_LAYOUTS = {
         "pause": [7],
     },
     LAYOUTS["NSPRO"]: {
+        "move_up": [pygame.JOYAXISMOTION],
+        "move_down": [pygame.JOYAXISMOTION],
+        "move_left": [pygame.JOYAXISMOTION],
+        "move_right": [pygame.JOYAXISMOTION],
+        "pause": [6],
+    },
+    LAYOUTS["PS5"]: {
         "move_up": [pygame.JOYAXISMOTION],
         "move_down": [pygame.JOYAXISMOTION],
         "move_left": [pygame.JOYAXISMOTION],

@@ -123,3 +123,33 @@ class XboxInputManager(InputManager):
             self.actions["move_right"]["state"] = self.joystick.get_axis(0) > 0.5
         else:
             print("No joystick available for update.")
+
+
+class PS5InputManager(InputManager):
+    def __init__(self, joystick_id=0, layout: LAYOUTS = LAYOUTS["PS5"]):
+        super().__init__(layout=layout)
+        pygame.joystick.init()
+        self.joystick = None
+        self.set_joystick(joystick_id)
+
+    def set_joystick(self, joystick_id):
+        """Initialize or update the joystick."""
+        if pygame.joystick.get_count() > 0:
+            try:
+                self.joystick = pygame.joystick.Joystick(joystick_id)
+                self.joystick.init()
+            except pygame.error as e:
+                print(f"Failed to initialize PS5 Controller: {e}")
+        else:
+            print("No PS5 Controller detected.")
+            self.joystick = None
+
+    def update(self):
+        """Update the state of actions based on controller inputs."""
+        if self.joystick:
+            self.actions["move_up"]["state"] = self.joystick.get_axis(1) < -0.5
+            self.actions["move_down"]["state"] = self.joystick.get_axis(1) > 0.5
+            self.actions["move_left"]["state"] = self.joystick.get_axis(0) < -0.5
+            self.actions["move_right"]["state"] = self.joystick.get_axis(0) > 0.5
+        else:
+            print("No joystick available for update.")

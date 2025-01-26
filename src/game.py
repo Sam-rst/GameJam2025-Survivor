@@ -8,15 +8,17 @@ from src.systems.input_manager import (
     KeyboardInputManager,
     NintendoSwitchProInputManager,
     XboxInputManager,
+    PS5InputManager,
 )
 from src.utils.groups import AllSprites
 
-LIST_CONTROLLERS_INPUT_MANAGERS = [NintendoSwitchProInputManager, XboxInputManager]
+LIST_CONTROLLERS_INPUT_MANAGERS = [NintendoSwitchProInputManager, XboxInputManager, PS5InputManager]
 INPUTS_MANAGERS = {
     LAYOUTS["AZERTY"]: KeyboardInputManager(),
     LAYOUTS["QWERTY"]: KeyboardInputManager(),
     LAYOUTS["NSPRO"]: NintendoSwitchProInputManager(),
     LAYOUTS["XBOX"]: XboxInputManager(),
+    LAYOUTS["PS5"]: PS5InputManager(),
 }
 
 
@@ -105,6 +107,9 @@ class Game:
                     elif joystick.get_name() == "Controller (Xbox One For Windows)":
                         print(f"Changement avec une manette {joystick.get_name()}")
                         self.change_input_manager(LAYOUTS["XBOX"])
+                    elif joystick.get_name() == "DualSense Wireless Controller":
+                        print(f"Changement avec une manette {joystick.get_name()}")
+                        self.change_input_manager(LAYOUTS["PS5"])
                     else:
                         print("Manette inconnue, retour au clavier.")
                         self.change_input_manager(LAYOUTS[DEFAULT_LAYOUT])
@@ -126,6 +131,9 @@ class Game:
                         elif joystick.get_name() == "Controller (Xbox One For Windows)":
                             print("Xbox Controller initialized.")
                             self.change_input_manager(LAYOUTS["XBOX"])
+                        elif joystick.get_name() == "DualSense Wireless Controller":
+                            print("PS5 Controller initialized.")
+                            self.change_input_manager(LAYOUTS["PS5"])
                         else:
                             print("Manette inconnue, retour au clavier.")
                             self.change_input_manager(LAYOUTS[DEFAULT_LAYOUT])
