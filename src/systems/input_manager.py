@@ -78,7 +78,6 @@ class NintendoSwitchProInputManager(InputManager):
             try:
                 self.joystick = pygame.joystick.Joystick(joystick_id)
                 self.joystick.init()
-                print("Nintendo Switch Pro Controller initialized.")
             except pygame.error as e:
                 print(f"Failed to initialize Nintendo Switch Pro Controller: {e}")
         else:
@@ -109,7 +108,6 @@ class XboxInputManager(InputManager):
             try:
                 self.joystick = pygame.joystick.Joystick(joystick_id)
                 self.joystick.init()
-                print("Xbox Controller initialized.")
             except pygame.error as e:
                 print(f"Failed to initialize Xbox Controller: {e}")
         else:

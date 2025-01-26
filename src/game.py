@@ -106,7 +106,7 @@ class Game:
                         print(f"Changement avec une manette {joystick.get_name()}")
                         self.change_input_manager(LAYOUTS["XBOX"])
                     else:
-                        print("Aucune manette connectée, retour au clavier.")
+                        print("Manette inconnue, retour au clavier.")
                         self.change_input_manager(LAYOUTS[DEFAULT_LAYOUT])
 
                     if event.button in COMMAND_LAYOUTS[self.selected_layout]["pause"]:
@@ -114,24 +114,33 @@ class Game:
 
                 # Détection de branchement de manette
                 elif event.type == pygame.JOYDEVICEADDED:
-                    joystick = pygame.joystick.Joystick(event.device_index)
-                    joystick.init()
-                    print(f"Nouvelle manette détectée : {joystick.get_name()}")
+                    try:
+                        joystick = pygame.joystick.Joystick(event.device_index)
+                        joystick.init()
+                        print(f"Nouvelle manette détectée : {joystick.get_name()}")
 
-                    # Changer dynamiquement l'input manager selon le type de manette
-                    if joystick.get_name() == "Nintendo Switch Pro Controller":
-                        self.change_input_manager(LAYOUTS["NSPRO"])
-                    elif joystick.get_name() == "Controller (Xbox One For Windows)":
-                        self.change_input_manager(LAYOUTS["XBOX"])
-                    else:
-                        self.change_input_manager(LAYOUTS[DEFAULT_LAYOUT])
+                        # Changer dynamiquement l'input manager selon le type de manette
+                        if joystick.get_name() == "Nintendo Switch Pro Controller":
+                            print("Nintendo Switch Pro Controller initialized.")
+                            self.change_input_manager(LAYOUTS["NSPRO"])
+                        elif joystick.get_name() == "Controller (Xbox One For Windows)":
+                            print("Xbox Controller initialized.")
+                            self.change_input_manager(LAYOUTS["XBOX"])
+                        else:
+                            print("Manette inconnue, retour au clavier.")
+                            self.change_input_manager(LAYOUTS[DEFAULT_LAYOUT])
+                    except pygame.error as e:
+                        print(f"Erreur lors de l'ajout d'une manette : {e}")
 
                 # Détection de débranchement de manette
                 elif event.type == pygame.JOYDEVICEREMOVED:
-                    print(f"Manette déconnectée : ID {event.instance_id}")
-                    if pygame.joystick.get_count() == 0:
-                        print("Aucune manette connectée, retour au clavier.")
-                        self.change_input_manager(LAYOUTS[DEFAULT_LAYOUT])
+                    try:
+                        print(f"Manette déconnectée : ID {event.instance_id}")
+                        if pygame.joystick.get_count() == 0:
+                            print("Aucune manette connectée, retour au clavier.")
+                            self.change_input_manager(LAYOUTS[DEFAULT_LAYOUT])
+                    except KeyError as e:
+                        print(f"Erreur lors de la déconnexion de la manette : {e}")
 
             # Update
             self.all_sprites.update(dt)
