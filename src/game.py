@@ -13,7 +13,11 @@ from src.systems.input_manager import (
 )
 from src.utils.groups import AllSprites
 
-LIST_CONTROLLERS_INPUT_MANAGERS = [NintendoSwitchProInputManager, XboxInputManager, PS5InputManager]
+LIST_CONTROLLERS_INPUT_MANAGERS = [
+    NintendoSwitchProInputManager,
+    XboxInputManager,
+    PS5InputManager,
+]
 INPUTS_MANAGERS = {
     LAYOUTS["AZERTY"]: KeyboardInputManager(),
     LAYOUTS["QWERTY"]: KeyboardInputManager(),
@@ -24,9 +28,10 @@ INPUTS_MANAGERS = {
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, debug=False):
         self.selected_layout = DEFAULT_LAYOUT
         self.input_manager = INPUTS_MANAGERS[self.selected_layout]
+        self.debug = debug
 
         pygame.init()
         self.display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -97,8 +102,21 @@ class Game:
             Sprite((x * TILE_SIZE, y * TILE_SIZE), image, (self.all_sprites,))
 
         for obj in map.get_layer_by_name("Objects"):
+            if "colliders" in obj.properties.keys():
+                for object in obj.properties["colliders"]:
+                    if object.name == "hitbox":
+                        CollisionSprite(
+                            (obj.x + object.x, obj.y + object.y),
+                            pygame.Surface((object.width, object.height)),
+                            (self.collision_sprites),
+                        )
+            else:
+                print(f"La tuile n°{obj.properties["id"]} ne possède pas de propriété colliders.")
+
             CollisionSprite(
-                (obj.x, obj.y), obj.image, (self.all_sprites, self.collision_sprites)
+                (obj.x, obj.y),
+                obj.image,
+                (self.all_sprites),
             )
 
         for obj in map.get_layer_by_name("Collisions"):
@@ -123,7 +141,9 @@ class Game:
     def change_input_manager(self, layout: LAYOUTS):
         self.selected_layout = layout
         self.input_manager = INPUTS_MANAGERS[self.selected_layout]
-        if isinstance(self.input_manager, tuple(LIST_CONTROLLERS_INPUT_MANAGERS)): # Pour les manettes
+        if isinstance(
+            self.input_manager, tuple(LIST_CONTROLLERS_INPUT_MANAGERS)
+        ):  # Pour les manettes
             self.input_manager.set_joystick(0)  # Toujours utiliser la première manette
         self.player.change_input_manager(self.input_manager)
 
@@ -160,7 +180,6 @@ class Game:
                     if event.type == pygame.KEYDOWN:
                         if event.key in COMMAND_LAYOUTS[self.selected_layout]["pause"]:
                             self.running = False
-
 
                 # Si un bouton de la manette est pressé
                 elif event.type in [pygame.JOYBUTTONDOWN]:
@@ -226,6 +245,9 @@ class Game:
             # Draw
             self.display_surface.fill("black")
             self.all_sprites.draw(self.player.rect.center)
+            if self.debug:
+                print(f"x : {self.player.rect.x}, {self.player.rect.y}")
+
             pygame.display.update()
 
         pygame.quit()
