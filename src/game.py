@@ -68,6 +68,7 @@ class Game:
                     self.collision_sprites,
                     self.input_manager,
                 )
+                self.gun = Gun(self.player, self.all_sprites)
 
     def change_input_manager(self, layout: LAYOUTS):
         self.selected_layout = layout
@@ -75,7 +76,6 @@ class Game:
         if isinstance(self.input_manager, tuple(LIST_CONTROLLERS_INPUT_MANAGERS)): # Pour les manettes
             self.input_manager.set_joystick(0)  # Toujours utiliser la première manette
         self.player.change_input_manager(self.input_manager)
-
 
     def run(self):
         while self.running:
