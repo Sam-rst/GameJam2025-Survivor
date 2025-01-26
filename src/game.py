@@ -1,7 +1,8 @@
-import random
+from random import randint, choice
 import pygame
 from src.settings import *
 from src.entities.player import Player
+from src.systems.collision import Enemy
 from src.systems.collision import *
 from pytmx.util_pygame import load_pygame
 from src.systems.input_manager import (
@@ -36,10 +37,58 @@ class Game:
         # Groups
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
+        self.bullet_sprites = pygame.sprite.Group()
+        self.ennemy_sprites = pygame.sprite.Group()
 
+        # gun timer
+        self.can_shoot = True
+        self.shoot_time = 0
+        self.gun_cooldown = 100
+
+        # enemy timer
+        self.ennemy_event = pygame.event.custom_type()
+        pygame.time.set_timer(self.ennemy_event, 300)
+        self.spawn_position = []
+
+        # audio
+        self.shoot_song = pygame.mixer.Sound(join('assets', 'sounds', 'shoot.wav'))
+        self.shoot_song.set_volume(0.4)
+        self.impact_sound = pygame.mixer.Sound(join('assets', 'sounds', 'impact.ogg'))
+        self.music = pygame.mixer.Sound(join('assets', 'sounds', 'music.wav'))
+        self.music.set_volume(0.3)
+        self.music.play(loops = -1)
+
+        # setup
+        self.load_images()
         self.setup()
 
-        # Sprites --
+    def load_images(self):
+        self.bullet_surf = pygame.image.load(join('assets', 'images', 'gun', 'bullet.png')).convert_alpha()
+
+        folders = list(walk(join('assets', 'images', 'enemies')))[0][1]
+        self.ennemy_frame = {}
+        for folder in folders:
+            for folder_path, _, file_names in walk(join('assets', 'images', 'enemies', folder)):
+                self.ennemy_frame[folder] = []
+                for file_name in sorted(file_names, key=lambda name: name.split('.')[0]):
+                    full_path = join(folder_path, file_name)
+                    surf = pygame.image.load(full_path).convert_alpha()
+                    self.ennemy_frame[folder].append(surf)
+
+    def input(self):
+        if pygame.mouse.get_pressed()[0] and self.can_shoot:
+            self.shoot_song.play()
+            pos = self.gun.rect.center + self.gun.player_direction * 50
+            Bullet(self.bullet_surf, pos, self.gun.player_direction, (self.all_sprites, self.bullet_sprites))
+            self.can_shoot = False
+            self.shoot_time = pygame.time.get_ticks()
+
+    def gun_timer(self):
+        if not self.can_shoot:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.shoot_time >= self.gun_cooldown:
+                self.can_shoot = True
+
 
     def setup(self):
         map = load_pygame(join("assets", "data", "maps", "world.tmx"))
@@ -61,7 +110,6 @@ class Game:
 
         for obj in map.get_layer_by_name("Entities"):
             if obj.name == "Spawn":
-                print("Je suis un player")
                 self.player = Player(
                     (obj.x, obj.y),
                     self.all_sprites,
@@ -69,6 +117,8 @@ class Game:
                     self.input_manager,
                 )
                 self.gun = Gun(self.player, self.all_sprites)
+            else:
+                self.spawn_position.append((obj.x, obj.y))
 
     def change_input_manager(self, layout: LAYOUTS):
         self.selected_layout = layout
@@ -76,6 +126,20 @@ class Game:
         if isinstance(self.input_manager, tuple(LIST_CONTROLLERS_INPUT_MANAGERS)): # Pour les manettes
             self.input_manager.set_joystick(0)  # Toujours utiliser la première manette
         self.player.change_input_manager(self.input_manager)
+
+    def bullet_collision(self):
+        if self.bullet_sprites:
+            for bullet in self.bullet_sprites:
+                collision_sprites = pygame.sprite.spritecollide(bullet, self.ennemy_sprites, False, pygame.sprite.collide_mask)
+                if collision_sprites:
+                    self.impact_sound.play()
+                    for sprite in collision_sprites:
+                        sprite.destroy()
+                    bullet.kill()
+
+    def player_collision(self):
+        if pygame.sprite.spritecollide(self.player, self.ennemy_sprites, False, pygame.sprite.collide_mask):
+            self.running = False
 
     def run(self):
         while self.running:
@@ -86,14 +150,16 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                if event.type == self.ennemy_event:
+                    Enemy(choice(self.spawn_position), choice(list(self.ennemy_frame.values())), (self.all_sprites, self.ennemy_sprites), self.player, self.collision_sprites)
 
                 # Si une touche du clavier est pressée
                 elif event.type in [pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN]:
                     self.change_input_manager(DEFAULT_LAYOUT)
                     print("Changement avec le clavier")
-
-                    if event.key in COMMAND_LAYOUTS[self.selected_layout]["pause"]:
-                        self.running = False
+                    if event.type == pygame.KEYDOWN:
+                        if event.key in COMMAND_LAYOUTS[self.selected_layout]["pause"]:
+                            self.running = False
 
 
                 # Si un bouton de la manette est pressé
@@ -151,7 +217,11 @@ class Game:
                         print(f"Erreur lors de la déconnexion de la manette : {e}")
 
             # Update
+            self.gun_timer()
+            self.input()
             self.all_sprites.update(dt)
+            self.bullet_collision()
+            self.player_collision()
 
             # Draw
             self.display_surface.fill("black")
